@@ -1,0 +1,55 @@
+name: Update Internship Tracker
+
+on:
+  push:
+    paths:
+      - "applications.json"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Update README
+        run: |
+          python - <<'PY'
+          import json
+
+          with open("applications.json", "r") as f:
+              data = json.load(f)
+
+          applications = data.get("applications", [])
+
+          lines = [
+              "# Internship Application Tracker",
+              "",
+              "Automatically tracking my internship applications.",
+              "",
+              "## 💼 Applications",
+              "",
+              "| Company | Role | Date | Status |",
+              "|---|---|---|---|"
+          ]
+
+          for app in applications:
+              lines.append(
+                  f"| {app['company']} | {app['role']} | {app['date']} | {app['status']} |"
+              )
+
+          with open("README.md", "w") as f:
+              f.write("\n".join(lines) + "\n")
+          PY
+
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git diff --cached --quiet || git commit -m "Update internship applications"
+          git push
